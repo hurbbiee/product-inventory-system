@@ -2,12 +2,10 @@
 
 import FieldInput from "@/components/ui/field-input";
 import React from "react";
-import {
-  OrganizationRegisterFormType,
-} from "../../type/organization-request";
+import { OrganizationRegisterFormType } from "../../type/organization-request";
 import {
   OrganizationRegisterErrors,
-  validateLoginForm,
+  validateRegisterForm,
 } from "@/lib/validators/auth-validator";
 import { Button } from "@/components/ui/button";
 import { CreateOrganizationRequestType } from "@/app/features/organization/type/create-organization";
@@ -40,7 +38,7 @@ export default function RegisterSheet({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const validationErrors = validateLoginForm(form);
+    const validationErrors = validateRegisterForm(form);
 
     setErrors(validationErrors);
     setShake(validationErrors);
