@@ -1,6 +1,11 @@
-export interface AuthLoginResponse {
+export interface AuthOrganizationLoginResponse {
   accessToken: string;
   organization: loginOrganization;
+  user: user;
+}
+
+export interface AuthUserLoginReponse {
+  accessToken: string;
   user: user;
 }
 

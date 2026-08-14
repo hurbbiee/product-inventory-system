@@ -55,6 +55,13 @@ function getPageInfo(pathname: string): PageInfo {
     };
   }
 
+  if (pathname.startsWith("/todo-list")) {
+    return {
+      title: "TODO-LIST",
+      description: "ติดตามและจัดการงาน",
+    };
+  }
+
   return {
     title: "Dashboard",
     description: "ภาพรวมคลังสินค้าของคุณ",

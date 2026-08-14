@@ -3,16 +3,20 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import {
   Boxes,
+  CalendarDays,
   ChevronRight,
   LayoutDashboard,
+  ListTodo,
+  LogOut,
   Package,
   Plug,
   Settings,
   SlidersHorizontal,
+  UserRoundPen,
   Users,
 } from "lucide-react";
 
@@ -44,6 +48,15 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useUserStorage } from "@/hooks/use-user-storage";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { toast } from "sonner";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -87,6 +100,21 @@ const navSections: NavSection[] = [
         title: "Stock Activity",
         href: "/stock",
         icon: Boxes,
+      },
+    ],
+  },
+  {
+    label: "TODO-List",
+    items: [
+      {
+        title: "Todo-list",
+        href: "/todo-list",
+        icon: ListTodo,
+      },
+      {
+        title: "Calendar",
+        href: "/todo-list/calendar",
+        icon: CalendarDays,
       },
     ],
   },
@@ -188,7 +216,7 @@ function AppNavItem({
 
 export function AppSidebar() {
   const pathname = usePathname();
-
+  const route = useRouter();
   const { state, setOpen, isMobile, setOpenMobile } = useSidebar();
 
   const isCollapsed = state === "collapsed";
@@ -248,6 +276,15 @@ export function AppSidebar() {
   const userRole = user?.role ?? "Role";
 
   const userInitial = userName.trim().charAt(0).toUpperCase() || "N";
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("organization");
+    localStorage.removeItem("accessToken");
+    route.replace("/");
+
+    toast.success("ออกจากระบบสำเร็จ", { position: "bottom-right" });
+  };
   return (
     <Sidebar
       collapsible="icon"
@@ -465,21 +502,26 @@ export function AppSidebar() {
       >
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              tooltip={userName}
-              onClick={() => {
-                if (isCollapsed) {
-                  setOpen(true);
-                }
-              }}
-              className={cn(
-                "h-12 rounded-xl hover:bg-white/5",
-                isCollapsed ? "mx-auto size-11 justify-center p-0" : "px-2",
-              )}
-            >
-              <div
-                className="
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <SidebarMenuButton
+                    size="lg"
+                    tooltip={userName}
+                    onClick={() => {
+                      if (isCollapsed) {
+                        setOpen(true);
+                      }
+                    }}
+                    className={cn(
+                      "h-12 rounded-xl hover:bg-white/5",
+                      isCollapsed
+                        ? "mx-auto size-11 justify-center p-0"
+                        : "px-2",
+                    )}
+                  >
+                    <div
+                      className="
                   flex
                   size-9
                   shrink-0
@@ -493,22 +535,51 @@ export function AppSidebar() {
                   font-semibold
                   text-violet-300
                 "
+                    >
+                      {userInitial}
+                    </div>
+
+                    {!isCollapsed && (
+                      <div className="grid min-w-0 flex-1 text-left leading-tight">
+                        <span className="truncate text-sm font-medium text-white">
+                          {userName}
+                        </span>
+
+                        <span className="truncate text-xs text-slate-500">
+                          {userRole}
+                        </span>
+                      </div>
+                    )}
+                  </SidebarMenuButton>
+                }
+              />
+
+              <DropdownMenuContent
+                side={isCollapsed ? "right" : "top"}
+                align="start"
+                className="w-56"
               >
-                {userInitial}
-              </div>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className={"cursor-pointer"}>
+                    <UserRoundPen />
+                    Profile
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
 
-              {!isCollapsed && (
-                <div className="grid min-w-0 flex-1 text-left leading-tight">
-                  <span className="truncate text-sm font-medium text-white">
-                    {userName}
-                  </span>
+                <DropdownMenuSeparator />
 
-                  <span className="truncate text-xs text-slate-500">
-                    {userRole}
-                  </span>
-                </div>
-              )}
-            </SidebarMenuButton>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    className={"cursor-pointer"}
+                    variant="destructive"
+                    onClick={handleLogout}
+                  >
+                    <LogOut />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

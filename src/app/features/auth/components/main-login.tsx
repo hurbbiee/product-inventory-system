@@ -32,7 +32,7 @@ export default function MainLoginPage() {
 
   const [errors, setErrors] = React.useState<LoginFormErrors>({});
 
-  const authLoginMutation = useMutation({
+  const authLoginOrganizaitonMutation = useMutation({
     mutationFn: AuthService.loginOrganization,
 
     onSuccess: async (data) => {
@@ -40,6 +40,31 @@ export default function MainLoginPage() {
 
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("organization", JSON.stringify(organization));
+      localStorage.setItem("user", JSON.stringify(user));
+
+      toast.success("เข้าสู่ระบบสำเร็จ", { position: "bottom-right" });
+      route.replace("/dashboard");
+    },
+
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
+
+      toast.error(message, {
+        position: "bottom-right",
+      });
+    },
+  });
+
+  const authLoginUserMutation = useMutation({
+    mutationFn: AuthService.loginOrganization,
+
+    onSuccess: async (data) => {
+      const { accessToken, user } = data;
+
+      localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("เข้าสู่ระบบสำเร็จ", { position: "bottom-right" });
@@ -92,7 +117,11 @@ export default function MainLoginPage() {
       return;
     }
 
-    authLoginMutation.mutate(form);
+    if (mode === "organization") {
+      authLoginOrganizaitonMutation.mutate(form);
+    } else {
+      authLoginUserMutation.mutate(form);
+    }
   };
 
   React.useEffect(() => {
@@ -209,41 +238,62 @@ export default function MainLoginPage() {
                     />
                   </div>
                 ) : (
-                  <div
-                    className={[
-                      "overflow-hidden transition-all duration-500 ease-[cubic-bezier(.2,.8,.2,1)]",
-                      isOrganization
-                        ? "mb-4 max-h-24 translate-y-0 opacity-100"
-                        : "max-h-0 -translate-y-3 opacity-0",
-                    ].join(" ")}
-                  ></div>
+                  <>
+                    <div
+                      className={[
+                        "overflow-hidden transition-all duration-500 ease-[cubic-bezier(.2,.8,.2,1)]",
+                        isOrganization
+                          ? "mb-4 max-h-24 translate-y-0 opacity-100"
+                          : "max-h-0 -translate-y-3 opacity-0",
+                      ].join(" ")}
+                    ></div>
+
+                    <div className="space-y-3">
+                      <FieldInput
+                        shake={shake.email}
+                        id="email"
+                        label="อีเมล"
+                        type="text"
+                        placeholder="example@email.com"
+                        value={form.email}
+                        error={errors.email}
+                        onChange={(value) => {
+                          setForm((prev) => ({
+                            ...prev,
+                            email: value,
+                          }));
+
+                          setErrors((prev) => ({
+                            ...prev,
+                            email: undefined,
+                          }));
+                        }}
+                      />
+
+                      <FieldInput
+                        shake={shake.password}
+                        id="password"
+                        label="รหัสผ่าน"
+                        type="password"
+                        placeholder="กรอกรหัสผ่าน"
+                        value={form.password}
+                        error={errors.password}
+                        showPasswordToggle
+                        onChange={(value) => {
+                          setForm((prev) => ({
+                            ...prev,
+                            password: value,
+                          }));
+
+                          setErrors((prev) => ({
+                            ...prev,
+                            password: undefined,
+                          }));
+                        }}
+                      />
+                    </div>
+                  </>
                 )}
-
-                <div
-                  className={[
-                    "overflow-hidden transition-all duration-500 ease-[cubic-bezier(.2,.8,.2,1)]",
-                    isOrganization
-                      ? "mb-4 max-h-24 translate-y-0 opacity-100"
-                      : "max-h-0 -translate-y-3 opacity-0",
-                  ].join(" ")}
-                >
-                  asdasd
-                </div>
-
-                <div className="space-y-4">
-                  {/* <Field
-                                        id="email"
-                                        label="อีเมล"
-                                        type="email"
-                                        placeholder="you@example.com"
-                                    />
-                                    <Field
-                                        id="password"
-                                        label="รหัสผ่าน"
-                                        type="password"
-                                        placeholder="••••••••"
-                                    /> */}
-                </div>
 
                 <div className="my-5 flex items-center justify-end gap-3 text-sm">
                   <button
@@ -257,9 +307,13 @@ export default function MainLoginPage() {
                 <Button
                   type="submit"
                   className="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-all hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  disabled={authLoginMutation.isPending}
+                  disabled={
+                    authLoginOrganizaitonMutation.isPending ||
+                    authLoginUserMutation.isPending
+                  }
                 >
-                  {authLoginMutation.isPending
+                  {authLoginOrganizaitonMutation.isPending ||
+                  authLoginUserMutation.isPending
                     ? "กำลังเข้าสู่ระบบ..."
                     : isOrganization
                       ? "เข้าสู่ Organization"
