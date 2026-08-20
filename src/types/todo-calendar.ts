@@ -25,9 +25,14 @@ export interface TodoCalendarItem extends TodoEventMeta {
   end?: string;
 }
 
-export interface CreateTodoInput {
+export interface EditTodoInput {
   title: string;
   description: string;
+
   date: string;
   time: string;
+
+  status: TodoStatus;
+  priority: TodoPriority;
+  type: TodoType;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock, Flag, User } from "lucide-react";
+import { CalendarDays, Clock, Flag, Pencil, User } from "lucide-react";
 
 import {
   Sheet,
@@ -15,11 +15,14 @@ import type {
   TodoPriority,
   TodoStatus,
 } from "@/types/todo-calendar";
+import { Button } from "../ui/button";
 
 interface TodoDetailSheetProps {
   todo: TodoCalendarItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEdit: (todo: TodoCalendarItem) => void;
+  onDelete: (todo: TodoCalendarItem) => void;
 }
 
 const statusLabels: Record<TodoStatus, string> = {
@@ -38,6 +41,8 @@ export function TodoDetailSheet({
   todo,
   open,
   onOpenChange,
+  onEdit,
+  onDelete,
 }: TodoDetailSheetProps) {
   if (!todo) {
     return null;
@@ -98,6 +103,28 @@ export function TodoDetailSheet({
               </p>
             </div>
           )}
+
+          <div className="mt-auto flex gap-2 border-t p-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                onEdit(todo);
+              }}
+            >
+              แก้ไขงาน
+            </Button>
+
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={() => {
+                onDelete(todo);
+              }}
+            >
+              ลบงาน
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

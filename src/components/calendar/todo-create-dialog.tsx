@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,41 +16,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { CreateTodoInput } from "@/types/todo-calendar";
+import type { EditTodoInput } from "@/types/todo-calendar";
 
 interface TodoCreateDialogProps {
   open: boolean;
-
   initialDate: string;
   initialTime: string;
-
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: CreateTodoInput) => void;
+  onSubmit: (values: EditTodoInput) => void;
 }
 
-export function TodoCreateDialog({
-  open,
+interface TodoCreateFormProps {
+  initialDate: string;
+  initialTime: string;
+  onCancel: () => void;
+  onSubmit: (values: EditTodoInput) => void;
+}
+
+function TodoCreateForm({
   initialDate,
   initialTime,
-  onOpenChange,
+  onCancel,
   onSubmit,
-}: TodoCreateDialogProps) {
+}: TodoCreateFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    setTitle("");
-    setDescription("");
-    setDate(initialDate);
-    setTime(initialTime);
-  }, [open, initialDate, initialTime]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,89 +65,103 @@ export function TodoCreateDialog({
   const isInvalid = !title.trim() || !date || !time;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>เพิ่มงานใหม่</DialogTitle>
+    <form onSubmit={handleSubmit}>
+      <DialogHeader>
+        <DialogTitle>เพิ่มงานใหม่</DialogTitle>
 
-            <DialogDescription>เพิ่มงานหรือกิจกรรมลงในปฏิทิน</DialogDescription>
-          </DialogHeader>
+        <DialogDescription>เพิ่มงานหรือกิจกรรมลงในปฏิทิน</DialogDescription>
+      </DialogHeader>
 
-          <div className="space-y-5 py-6">
-            <div className="space-y-2">
-              <Label htmlFor="todo-title">ชื่องาน</Label>
+      <div className="space-y-5 py-6">
+        <div className="space-y-2">
+          <Label htmlFor="todo-title">ชื่องาน</Label>
 
-              <Input
-                id="todo-title"
-                value={title}
-                onChange={(event) => {
-                  setTitle(event.target.value);
-                }}
-                placeholder="เช่น ตรวจนับสต็อกประจำเดือน"
-                autoFocus
-              />
-            </div>
+          <Input
+            id="todo-title"
+            value={title}
+            onChange={(event) => {
+              setTitle(event.target.value);
+            }}
+            placeholder="เช่น ตรวจนับสต็อกประจำเดือน"
+            autoFocus
+          />
+        </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="todo-date">วันที่</Label>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="todo-date">วันที่</Label>
 
-                <Input
-                  id="todo-date"
-                  type="date"
-                  value={date}
-                  onChange={(event) => {
-                    setDate(event.target.value);
-                  }}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="todo-time">เวลา</Label>
-
-                <Input
-                  id="todo-time"
-                  type="time"
-                  value={time}
-                  onChange={(event) => {
-                    setTime(event.target.value);
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="todo-description">รายละเอียด</Label>
-
-              <Textarea
-                id="todo-description"
-                value={description}
-                onChange={(event) => {
-                  setDescription(event.target.value);
-                }}
-                placeholder="รายละเอียดเพิ่มเติม..."
-                rows={4}
-              />
-            </div>
+            <Input
+              id="todo-date"
+              type="date"
+              value={date}
+              onChange={(event) => {
+                setDate(event.target.value);
+              }}
+            />
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                onOpenChange(false);
-              }}
-            >
-              ยกเลิก
-            </Button>
+          <div className="space-y-2">
+            <Label htmlFor="todo-time">เวลา</Label>
 
-            <Button type="submit" disabled={isInvalid}>
-              เพิ่มงาน
-            </Button>
-          </DialogFooter>
-        </form>
+            <Input
+              id="todo-time"
+              type="time"
+              value={time}
+              onChange={(event) => {
+                setTime(event.target.value);
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="todo-description">รายละเอียด</Label>
+
+          <Textarea
+            id="todo-description"
+            value={description}
+            onChange={(event) => {
+              setDescription(event.target.value);
+            }}
+            rows={4}
+          />
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          ยกเลิก
+        </Button>
+
+        <Button type="submit" disabled={isInvalid}>
+          เพิ่มงาน
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+export function TodoCreateDialog({
+  open,
+  initialDate,
+  initialTime,
+  onOpenChange,
+  onSubmit,
+}: TodoCreateDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        {open && (
+          <TodoCreateForm
+            initialDate={initialDate}
+            initialTime={initialTime}
+            onCancel={() => {
+              onOpenChange(false);
+            }}
+            onSubmit={onSubmit}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

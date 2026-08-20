@@ -2,11 +2,14 @@
 
 import { EventCalendar } from "@/components/event-calendar";
 import { mapTodoToEvent } from "@/lib/calendar/map-todo-to-event";
-import type { CreateTodoInput, TodoCalendarItem } from "@/types/todo-calendar";
+import type { EditTodoInput, TodoCalendarItem } from "@/types/todo-calendar";
 import { TodoEventContent } from "./todo-event-content";
 import { useState } from "react";
 import { TodoDetailSheet } from "./todo-detail-sheet";
 import { TodoCreateDialog } from "./todo-create-dialog";
+import { TodoEditDialog } from "./todo-edit-dialog";
+import { TodoDeleteDialog } from "./todo-delete-dialog";
+import { toLocalDateTimeString } from "@/lib/date-utils";
 const initialTodos: TodoCalendarItem[] = [
   {
     id: "1",
@@ -55,18 +58,42 @@ export function TodoCalendar() {
   );
 
   const [todos, setTodos] = useState<TodoCalendarItem[]>(initialTodos);
-
   const [detailOpen, setDetailOpen] = useState(false);
-
   const [createOpen, setCreateOpen] = useState(false);
-
   const [createInitialDate, setCreateInitialDate] = useState("");
-
   const [createInitialTime, setCreateInitialTime] = useState("09:00");
-
   const calendarEvents = initialTodos.map(mapTodoToEvent);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<TodoCalendarItem | null>(null);
 
-  const handleCreateTodo = (values: CreateTodoInput) => {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const [deletingTodo, setDeletingTodo] = useState<TodoCalendarItem | null>(
+    null,
+  );
+
+  const handleDeleteTodo = (todo: TodoCalendarItem) => {
+    setDeletingTodo(todo);
+
+    setDetailOpen(false);
+    setDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletingTodo) {
+      return;
+    }
+
+    setTodos((currentTodos) =>
+      currentTodos.filter((todo) => todo.id !== deletingTodo.id),
+    );
+
+    setSelectedTodo(null);
+    setDeletingTodo(null);
+    setDeleteOpen(false);
+  };
+
+  const handleCreateTodo = (values: EditTodoInput) => {
     const newTodo: TodoCalendarItem = {
       id: crypto.randomUUID(),
 
@@ -86,6 +113,73 @@ export function TodoCalendar() {
     setCreateOpen(false);
   };
 
+  const handleEditTodo = (todo: TodoCalendarItem) => {
+    setEditingTodo(todo);
+
+    setDetailOpen(false);
+    setEditOpen(true);
+  };
+
+  const handleUpdateTodo = (values: EditTodoInput) => {
+    if (!editingTodo) {
+      return;
+    }
+
+    const updatedTodo: TodoCalendarItem = {
+      ...editingTodo,
+
+      title: values.title,
+
+      description: values.description || undefined,
+
+      start: `${values.date}T${values.time}:00`,
+
+      status: values.status,
+      priority: values.priority,
+      type: values.type,
+    };
+
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) => {
+        if (todo.id === updatedTodo.id) {
+          return updatedTodo;
+        }
+
+        return todo;
+      }),
+    );
+
+    setSelectedTodo(updatedTodo);
+    setEditingTodo(null);
+    setEditOpen(false);
+  };
+  
+  const updateTodoDateTime = (
+    todoId: string,
+    start: Date | null,
+    end: Date | null,
+  ) => {
+    if (!start) {
+      return;
+    }
+
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) => {
+        if (todo.id !== todoId) {
+          return todo;
+        }
+
+        return {
+          ...todo,
+
+          start: toLocalDateTimeString(start),
+
+          end: end ? toLocalDateTimeString(end) : undefined,
+        };
+      }),
+    );
+  };
+
   return (
     <>
       <EventCalendar
@@ -100,6 +194,12 @@ export function TodoCalendar() {
         nowIndicator
         navLinks
         eventContent={(info) => <TodoEventContent info={info} />}
+        eventDrop={(info) => {
+          updateTodoDateTime(info.event.id, info.event.start, info.event.end);
+        }}
+        eventResize={(info) => {
+          updateTodoDateTime(info.event.id, info.event.start, info.event.end);
+        }}
         eventClick={(info) => {
           const todo = initialTodos.find((item) => item.id === info.event.id);
 
@@ -140,6 +240,8 @@ export function TodoCalendar() {
         todo={selectedTodo}
         open={detailOpen}
         onOpenChange={setDetailOpen}
+        onEdit={handleEditTodo}
+        onDelete={handleDeleteTodo}
       />
 
       <TodoCreateDialog
@@ -148,6 +250,20 @@ export function TodoCalendar() {
         initialTime={createInitialTime}
         onOpenChange={setCreateOpen}
         onSubmit={handleCreateTodo}
+      />
+
+      <TodoEditDialog
+        todo={selectedTodo}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSubmit={handleUpdateTodo}
+      />
+
+      <TodoDeleteDialog
+        todo={deletingTodo}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleConfirmDelete}
       />
     </>
   );
